@@ -167,6 +167,7 @@ function highlightFailedTexts() {
   
   // 非適合のテキストノードを収集
   for (var i = 0; i < lastCheckResults.length; i++) {
+    console.log('Checking result', i, '- AA compliant:', lastCheckResults[i].aa, 'ratio:', lastCheckResults[i].ratio);
     if (!lastCheckResults[i].aa) {
       var textNode = lastCheckResults[i].node;
       if (textNode && !textNode.removed) {
@@ -176,10 +177,11 @@ function highlightFailedTexts() {
     }
   }
   
-  console.log('Found', failedCount, 'failed text nodes to highlight');
+  console.log('Total results:', lastCheckResults.length, 'Failed count:', failedCount);
   
   if (failedCount === 0) {
     figma.notify('✅ すべてのテキストが適合しています');
+    console.log('All texts passed compliance - notification sent');
     return;
   }
   

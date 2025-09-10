@@ -14,7 +14,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
       line-height: 1.5;
-      color: #333;
+      color: #181A1B;
       background: #fff;
       padding: 16px;
     }
@@ -28,12 +28,12 @@
       font-size: 18px;
       font-weight: 600;
       margin-bottom: 8px;
-      color: #1a1a1a;
+      color: #181A1B;
     }
 
     .header p {
       font-size: 12px;
-      color: #666;
+      color: #494D50;
     }
 
     .main-section {
@@ -43,7 +43,7 @@
     .check-button {
       width: 100%;
       padding: 12px 16px;
-      background: #18a0fb;
+      background: #2B3BEE;
       color: white;
       border: none;
       border-radius: 6px;
@@ -52,18 +52,19 @@
       cursor: pointer;
       transition: background-color 0.2s;
       margin-bottom: 16px;
+      font-weight: bold;
     }
 
     .check-button:hover {
-      background: #0d7acc;
+      background: #0B1DDA;
     }
 
     .check-button:active {
-      background: #0b6fb7;
+      background: #0413AE;
     }
 
     .check-button:disabled {
-      background: #ddd;
+      background: #E4E5E7;
       cursor: not-allowed;
     }
 
@@ -94,12 +95,12 @@
     }
 
     .status-pass {
-      color: #28a745;
+      color: #049559;
       font-weight: 500;
     }
 
     .status-fail {
-      color: #dc3545;
+      color: #AE040A;
       font-weight: 500;
     }
 
@@ -131,58 +132,60 @@
 
     .info {
       font-size: 12px;
-      color: #666;
+      color: #494D50;
       margin-top: 16px;
       padding: 12px;
-      background: #f0f7ff;
+      background: #F5F9FF;
       border-radius: 6px;
-      border-left: 3px solid #18a0fb;
+      border-left: 3px solid #2B7FEE;
     }
 
     .highlight-controls {
       margin-top: 16px;
-      padding: 12px;
-      background: #f8f9fa;
-      border-radius: 6px;
-      border-top: 1px solid #dee2e6;
     }
 
     .highlight-button {
       width: 100%;
       padding: 8px 12px;
-      background: #28a745;
-      color: white;
-      border: none;
+      background: transparent;
+      color: #2B3BEE;
+      border: 2px solid #2B3BEE;
       border-radius: 4px;
       font-size: 12px;
       cursor: pointer;
       margin-bottom: 8px;
+      font-weight: bold;
+      transition: background-color 0.2s;
     }
 
     .highlight-button:hover {
-      background: #218838;
+      background: #F5F6FF;
     }
 
     .clear-button {
-      background: #6c757d;
+      background: #E4E5E7;
+      border: none;
+      font-weight: bold;
+      color: #181A1B;
+      transition: background-color 0.2s;
     }
 
     .clear-button:hover {
-      background: #5a6268;
+      background: #CACCCE;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🎨 Contrast Checker</h1>
+    <h1>Contrast Checker</h1>
     <p>テキストのコントラスト比をWCAG基準でチェック</p>
   </div>
 
   <div class="main-section">
     <button id="checkButton" class="check-button">
-      📊 コントラストをチェック
+      コントラストをチェック
     </button>
-    
+
     <div class="info">
       <strong>使用方法:</strong><br>
       1. Figmaでフレームまたは要素を選択<br>
@@ -200,30 +203,29 @@
   <div id="results" class="results">
     <div class="results-header">チェック結果</div>
     <div id="resultsList"></div>
-    
-    <div class="highlight-controls">
-      <button id="highlightButton" class="highlight-button">
-        🔍 問題のあるテキストを選択
-      </button>
-      <button id="clearButton" class="highlight-button clear-button">
-        ✨ 選択をクリア
-      </button>
-    </div>
+  </div>
+  <div class="highlight-controls">
+    <button id="highlightButton" class="highlight-button">
+      問題のあるテキストを選択
+    </button>
+    <button id="clearButton" class="highlight-button clear-button">
+      選択をクリア
+    </button>
   </div>
 
   <script>
     let checkResults = [];
 
     // ボタンイベントリスナー
-    document.getElementById('checkButton').addEventListener('click', function() {
+    document.getElementById('checkButton').addEventListener('click', function () {
       checkContrast();
     });
 
-    document.getElementById('highlightButton').addEventListener('click', function() {
+    document.getElementById('highlightButton').addEventListener('click', function () {
       highlightFailedTexts();
     });
 
-    document.getElementById('clearButton').addEventListener('click', function() {
+    document.getElementById('clearButton').addEventListener('click', function () {
       clearHighlights();
     });
 
@@ -242,36 +244,36 @@
       results.classList.remove('show');
 
       // メインスレッドにメッセージを送信
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'check-contrast' 
-        } 
+      parent.postMessage({
+        pluginMessage: {
+          type: 'check-contrast'
+        }
       }, '*');
     }
 
     // ハイライト実行
     function highlightFailedTexts() {
-      parent.postMessage({ 
-        pluginMessage: { 
+      parent.postMessage({
+        pluginMessage: {
           type: 'highlight-failed-texts',
           results: checkResults
-        } 
+        }
       }, '*');
     }
 
     // ハイライトクリア
     function clearHighlights() {
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'clear-highlights' 
-        } 
+      parent.postMessage({
+        pluginMessage: {
+          type: 'clear-highlights'
+        }
       }, '*');
     }
 
     // メインスレッドからのメッセージを受信
-    window.onmessage = function(event) {
+    window.onmessage = function (event) {
       const message = event.data.pluginMessage;
-      
+
       if (message.type === 'check-complete') {
         handleCheckComplete(message.data);
       } else if (message.type === 'check-error') {
@@ -288,7 +290,7 @@
 
       // UI状態を更新
       button.disabled = false;
-      button.textContent = '📊 コントラストをチェック';
+      button.textContent = 'コントラストをチェック';
       loading.style.display = 'none';
 
       // 結果を保存
@@ -306,7 +308,7 @@
       const error = document.getElementById('error');
 
       button.disabled = false;
-      button.textContent = '📊 コントラストをチェック';
+      button.textContent = 'コントラストをチェック';
       loading.style.display = 'none';
       error.style.display = 'block';
       error.textContent = errorMessage;
@@ -318,7 +320,7 @@
       const { results, totalTexts, passedCount, failedCount } = data;
 
       let html = '';
-      
+
       // サマリー
       html += `<div class="result-item">`;
       html += `<strong>総テキスト数:</strong> ${totalTexts} `;
@@ -330,12 +332,12 @@
       if (failedCount > 0) {
         const failedResults = results.filter(r => !r.aa);
         html += `<div class="result-item"><strong>問題のあるテキスト:</strong></div>`;
-        
+
         failedResults.forEach((result, index) => {
-          const textPreview = result.text.length > 30 
-            ? result.text.substring(0, 30) + '...' 
+          const textPreview = result.text.length > 30
+            ? result.text.substring(0, 30) + '...'
             : result.text;
-          
+
           html += `<div class="result-item">`;
           html += `${index + 1}. "${textPreview}"`;
           html += `<span class="ratio">${result.ratio}:1</span>`;
