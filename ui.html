@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Contrast Checker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+      background: #fff;
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .header p {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .main-section {
+      margin-bottom: 20px;
+    }
+
+    .check-button {
+      width: 100%;
+      padding: 12px 16px;
+      background: #18a0fb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .check-button:hover {
+      background: #0d7acc;
+    }
+
+    .check-button:active {
+      background: #0b6fb7;
+    }
+
+    .check-button:disabled {
+      background: #ddd;
+      cursor: not-allowed;
+    }
+
+    .results {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .results.show {
+      display: block;
+    }
+
+    .results-header {
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .result-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .status-pass {
+      color: #28a745;
+      font-weight: 500;
+    }
+
+    .status-fail {
+      color: #dc3545;
+      font-weight: 500;
+    }
+
+    .ratio {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 8px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: #666;
+      margin-top: 16px;
+    }
+
+    .error {
+      display: none;
+      padding: 12px;
+      background: #fff5f5;
+      border: 1px solid #feb2b2;
+      border-radius: 6px;
+      color: #c53030;
+      margin-top: 16px;
+    }
+
+    .info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 16px;
+      padding: 12px;
+      background: #f0f7ff;
+      border-radius: 6px;
+      border-left: 3px solid #18a0fb;
+    }
+
+    .highlight-controls {
+      margin-top: 16px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .highlight-button {
+      width: 100%;
+      padding: 8px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .highlight-button:hover {
+      background: #218838;
+    }
+
+    .clear-button {
+      background: #6c757d;
+    }
+
+    .clear-button:hover {
+      background: #5a6268;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎨 Contrast Checker</h1>
+    <p>テキストのコントラスト比をWCAG基準でチェック</p>
+  </div>
+
+  <div class="main-section">
+    <button id="checkButton" class="check-button">
+      📊 コントラストをチェック
+    </button>
+    
+    <div class="info">
+      <strong>使用方法:</strong><br>
+      1. Figmaでフレームまたは要素を選択<br>
+      2. 「コントラストをチェック」ボタンを押下<br>
+      3. 問題のあるテキストがFigma検索風に選択表示されます
+    </div>
+  </div>
+
+  <div id="loading" class="loading">
+    チェック中...
+  </div>
+
+  <div id="error" class="error"></div>
+
+  <div id="results" class="results">
+    <div class="results-header">チェック結果</div>
+    <div id="resultsList"></div>
+    
+    <div class="highlight-controls">
+      <button id="highlightButton" class="highlight-button">
+        🔍 問題のあるテキストを選択
+      </button>
+      <button id="clearButton" class="highlight-button clear-button">
+        ✨ 選択をクリア
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let checkResults = [];
+
+    // ボタンイベントリスナー
+    document.getElementById('checkButton').addEventListener('click', function() {
+      checkContrast();
+    });
+
+    document.getElementById('highlightButton').addEventListener('click', function() {
+      highlightFailedTexts();
+    });
+
+    document.getElementById('clearButton').addEventListener('click', function() {
+      clearHighlights();
+    });
+
+    // コントラストチェック実行
+    function checkContrast() {
+      const button = document.getElementById('checkButton');
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+      const results = document.getElementById('results');
+
+      // UI状態をリセット
+      button.disabled = true;
+      button.textContent = 'チェック中...';
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      results.classList.remove('show');
+
+      // メインスレッドにメッセージを送信
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'check-contrast' 
+        } 
+      }, '*');
+    }
+
+    // ハイライト実行
+    function highlightFailedTexts() {
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'highlight-failed-texts',
+          results: checkResults
+        } 
+      }, '*');
+    }
+
+    // ハイライトクリア
+    function clearHighlights() {
+      parent.postMessage({ 
+        pluginMessage: { 
+          type: 'clear-highlights' 
+        } 
+      }, '*');
+    }
+
+    // メインスレッドからのメッセージを受信
+    window.onmessage = function(event) {
+      const message = event.data.pluginMessage;
+      
+      if (message.type === 'check-complete') {
+        handleCheckComplete(message.data);
+      } else if (message.type === 'check-error') {
+        handleCheckError(message.error);
+      }
+    };
+
+    // チェック完了時の処理
+    function handleCheckComplete(data) {
+      const button = document.getElementById('checkButton');
+      const loading = document.getElementById('loading');
+      const results = document.getElementById('results');
+      const resultsList = document.getElementById('resultsList');
+
+      // UI状態を更新
+      button.disabled = false;
+      button.textContent = '📊 コントラストをチェック';
+      loading.style.display = 'none';
+
+      // 結果を保存
+      checkResults = data.results;
+
+      // 結果を表示
+      displayResults(data);
+      results.classList.add('show');
+    }
+
+    // エラー時の処理
+    function handleCheckError(errorMessage) {
+      const button = document.getElementById('checkButton');
+      const loading = document.getElementById('loading');
+      const error = document.getElementById('error');
+
+      button.disabled = false;
+      button.textContent = '📊 コントラストをチェック';
+      loading.style.display = 'none';
+      error.style.display = 'block';
+      error.textContent = errorMessage;
+    }
+
+    // 結果を表示
+    function displayResults(data) {
+      const resultsList = document.getElementById('resultsList');
+      const { results, totalTexts, passedCount, failedCount } = data;
+
+      let html = '';
+      
+      // サマリー
+      html += `<div class="result-item">`;
+      html += `<strong>総テキスト数:</strong> ${totalTexts} `;
+      html += `<span class="status-pass">適合: ${passedCount}</span> `;
+      html += `<span class="status-fail">非適合: ${failedCount}</span>`;
+      html += `</div>`;
+
+      // 各テキストの詳細（非適合のもののみ表示）
+      if (failedCount > 0) {
+        const failedResults = results.filter(r => !r.aa);
+        html += `<div class="result-item"><strong>問題のあるテキスト:</strong></div>`;
+        
+        failedResults.forEach((result, index) => {
+          const textPreview = result.text.length > 30 
+            ? result.text.substring(0, 30) + '...' 
+            : result.text;
+          
+          html += `<div class="result-item">`;
+          html += `${index + 1}. "${textPreview}"`;
+          html += `<span class="ratio">${result.ratio}:1</span>`;
+          html += ` <span class="status-fail">FAIL</span>`;
+          html += `<br><small>必要: ${result.isLargeText ? '3:1' : '4.5:1'} 以上</small>`;
+          html += `</div>`;
+        });
+      }
+
+      resultsList.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
