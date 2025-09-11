@@ -135,6 +135,12 @@ function findAllTextNodes(nodes) {
   
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
+    
+    // 非表示のレイヤーをスキップ
+    if (node.visible === false) {
+      continue;
+    }
+    
     if (node.type === 'TEXT') {
       textNodes.push(node);
     } else if (node.children && node.children.length > 0) {
